@@ -28,6 +28,7 @@ def iperf(args):
 def iperf_udp(n1, n2, args):
     lg.warning('...')
     cli(iperf(args))
+    rtt(n1, n2, args, 'UDP')
     killServer()
 
 def server(n1, n2, args, isTCP):
@@ -47,7 +48,7 @@ def server(n1, n2, args, isTCP):
             transfer = d['transfer'].split(' ')[-2]
             bandwidth = d['bandwidth'].split(' ')[-2]
 
-            dData += '{}, {}, {}\n'.format(interval, transfer, bandwidth)
+            dData += '{}, {}, {}, {}, {}\n'.format(n1, n2, interval, transfer, bandwidth)
         handler.write(dData)
         handler.close()
     else:
@@ -63,14 +64,27 @@ def server(n1, n2, args, isTCP):
             loss = d['loss']
             totalData = d['totalData']
             lossPercent = d['lossPercent']
-            dData += '{}, {}, {}, {}, {}, {}, {}\n'.format(interval, transfer, bandwidth, jitter, loss, totalData, lossPercent)
+            dData += '{}, {}, {}, {}, {}, {}, {}, {}, {}\n'.format(n1, n2, interval, transfer, bandwidth, jitter, loss, totalData, lossPercent)
         handler.write(dData)
         handler.close()
 
 def iperf_tcp(n1, n2, args):
     lg.warning('...')
     cli(iperf(args))
+    rtt(n1, n2, args, 'TCP')
     killServer()
+
+def rtt(n1, n2, args, proto):
+    lg.warning('Running RTT..')
+    serverIP = args[args.index('-c') + 1]
+    for res in cli(['ping', '-c', '12', serverIP]).splitlines():
+        handler = open(RTTFile, 'a')
+        resData = ''
+        if res.lower().find('icmp_seq') != -1:
+            duration = res.split(' ')[-2].split('=')[-1]
+            resData += '{}, {}, {}, {}\n'.format(n1, n2, duration, proto)
+        handler.write(resData)
+        handler.close()
 
 def parseUDP(start, res, args):
     init = False
