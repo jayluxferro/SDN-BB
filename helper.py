@@ -52,7 +52,20 @@ def server(n1, n2, args, isTCP):
         handler.close()
     else:
         data = parseUDP(start, res, args)
-        print(data)
+        # log data
+        handler = open(UDPFile, 'a')
+        dData = ''
+        for d in data['data']:
+            interval = d['interval'].split(' ')[-2].split('-')[-1]
+            transfer = d['transfer'].split(' ')[-2]
+            bandwidth = d['bandwidth'].split(' ')[-2]
+            jitter = d['jitter'].split(' ')[-2]
+            loss = d['loss']
+            totalData = d['totalData']
+            lossPercent = d['lossPercent']
+            dData += '{}, {}, {}, {}, {}, {}, {}\n'.format(interval, transfer, bandwidth, jitter, loss, totalData, lossPercent)
+        handler.write(dData)
+        handler.close()
 
 def iperf_tcp(n1, n2, args):
     lg.warning('...')
@@ -79,8 +92,6 @@ def parseUDP(start, res, args):
     if counter < 0:
         counter = 2
     return { 'data': data, 'sum': SUM, 'duration': time.time() - start, 'command': ' '.join(args), 'threads': counter - 2}
-    return None
-    pass
 
 def parseTCP(start, res, args):
     init = False
