@@ -37,14 +37,16 @@ def server(n1, n2, args, isTCP):
     res = []
     for x in cli(iperf(args)).splitlines():
         res.append(x)
+    #print(res)
     if isTCP == True:
+        lg.warning('TCP')
         # pass tcp output
         data = parseTCP(start, res, args)
         # log data
         handler = open(TCPFile, 'a')
         dData = ''
         for d in data['data']:
-            interval = d['interval'].split(' ')[-2].split('-')[-1]
+            interval = d['interval'].split(' ')[-2]
             transfer = d['transfer'].split(' ')[-2]
             bandwidth = d['bandwidth'].split(' ')[-2]
 
@@ -52,7 +54,10 @@ def server(n1, n2, args, isTCP):
         handler.write(dData)
         handler.close()
     else:
+        res.pop()
+        lg.warning('UDP')
         data = parseUDP(start, res, args)
+        #print(data)
         # log data
         handler = open(UDPFile, 'a')
         dData = ''
@@ -98,7 +103,7 @@ def parseUDP(start, res, args):
         if init == True and x.lower().find('transfer') == -1 and x != '':
             rcv = x.split('  ')
             #print(rcv)
-            data.append({'interval': rcv[2], 'transfer': rcv[3], 'bandwidth': rcv[4], 'jitter': rcv[5], 'loss': rcv[7].split('/')[0], 'totalData': rcv[8].split(' ')[0], 'lossPercent': rcv[8].split(' ')[-1].strip('()').split('%')[0]})
+            data.append({'interval': rcv[1], 'transfer': rcv[2], 'bandwidth': rcv[3], 'jitter': rcv[4], 'loss': rcv[6].split('/')[0], 'totalData': rcv[6].split(' ')[1], 'lossPercent': rcv[6].split(' ')[-1].strip('()').split('%')[0]})
             counter = counter + 1
     if counter - 2 == 0:
         counter = 3
